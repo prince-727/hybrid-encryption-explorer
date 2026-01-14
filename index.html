@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hybrid Encryption Explorer</title>
+    <style>
+        :root {
+            --color-primary: #208091;
+            --color-primary-hover: #1a6575;
+            --color-success: #2ba58f;
+            --color-error: #c01527;
+            --color-warning: #a84b2f;
+            --color-bg-primary: #fcfcf9;
+            --color-bg-secondary: #f5f5f5;
+            --color-text-primary: #134252;
+            --color-text-secondary: #626c7c;
+            --color-border: rgba(94, 82, 64, 0.2);
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--color-bg-primary);
+            color: var(--color-text-primary);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--color-border);
+        }
+        h1 {
+            margin: 0 0 10px 0;
+            font-size: 2em;
+            color: var(--color-primary);
+        }
+        .subtitle {
+            color: var(--color-text-secondary);
+            font-size: 1.1em;
+        }
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        @media (max-width: 900px) {
+            .main-content { grid-template-columns: 1fr; }
+        }
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid var(--color-border);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        .section h2 {
+            margin-top: 0;
+            color: var(--color-primary);
+            border-bottom: 2px solid var(--color-border);
+            padding-bottom: 10px;
+        }
+        .form-group { margin-bottom: 20px; }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+            font-size: 0.95em;
+        }
+        input[type="text"], input[type="number"], textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 0.95em;
+            background-color: var(--color-bg-secondary);
+            color: var(--color-text-primary);
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus, input[type="number"]:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(32, 128, 145, 0.1);
+        }
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95em;
+        }
+        .btn-primary {
+            background-color: var(--color-primary);
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: var(--color-primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(32, 128, 145, 0.3);
+        }
+        .btn-primary:active { transform: translateY(0); }
+        .btn-secondary {
+            background-color: var(--color-bg-secondary);
+            color: var(--color-text-primary);
+            border: 1px solid var(--color-border);
+        }
+        .btn-secondary:hover {
+            background-color: rgba(32, 128, 145, 0.1);
+        }
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.85em;
+        }
+        .output-box {
+            background-color: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            color: var(--color-text-primary);
+            word-break: break-all;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .output-label {
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .copy-btn {
+            padding: 4px 8px;
+            font-size: 0.8em;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .status-success { background-color: var(--color-success); }
+        .status-error { background-color: var(--color-error); }
+        .status-pending { background-color: var(--color-warning); }
+        .info-box {
+            background-color: rgba(32, 128, 145, 0.08);
+            border-left: 4px solid var(--color-primary);
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .info-box h4 {
+            margin-top: 0;
+            color: var(--color-primary);
+        }
+        .info-box p {
+            margin: 8px 0;
+            color: var(--color-text-secondary);
+            font-size: 0.95em;
+        }
+        .flow-diagram {
+            background-color: white;
+            border: 2px solid var(--color-border);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .flow-step {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            font-size: 0.9em;
+        }
+        .flow-step-number {
+            background-color: var(--color-primary);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        .flow-step-desc { flex: 1; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background-color: var(--color-bg-secondary);
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+        }
+        .stat-label {
+            font-size: 0.85em;
+            color: var(--color-text-secondary);
+            margin-bottom: 6px;
+        }
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--color-primary);
+        }
+        .tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 2px solid var(--color-border);
+            margin-bottom: 20px;
+        }
+        .tab-button {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            color: var(--color-text-secondary);
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .tab-button:hover { color: var(--color-primary); }
+        .tab-button.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .key-display {
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8em;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .message {
+            padding: 12px;
+            border-radius: 6px;
+            margin: 15px 0;
+            display: none;
+        }
+        .message.show { display: block; }
+        .message.success {
+            background-color: rgba(43, 165, 143, 0.15);
+            border-left: 4px solid var(--color-success);
+            color: var(--color-success);
+        }
+        .message.error {
+            background-color: rgba(192, 21, 47, 0.15);
+            border-left: 4px solid var(--color-error);
+            color: var(--color-error);
+        }
+        .message.info {
+            background-color: rgba(32, 128, 145, 0.15);
+            border-left: 4px solid var(--color-primary);
+            color: var(--color-primary);
+        }
+        .privacy-impact {
+            background-color: white;
+            border: 2px solid var(--color-warning);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .privacy-impact h4 {
+            color: var(--color-warning);
+            margin-top: 0;
+        }
+        .privacy-impact ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .privacy-impact li {
+            margin: 6px 0;
+            font-size: 0.9em;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid var(--color-border);
+            color: var(--color-text-secondary);
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔐 Hybrid Encryption Explorer</h1>
+            <p class="subtitle">Educational tool demonstrating symmetric + asymmetric encryption for data privacy</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Encryption Section -->
+            <div class="section">
+                <h2>Encryption Pipeline</h2>
+                <div class="tabs">
+                    <button class="tab-button active" onclick="switchTab(event, 'encrypt-flow')">Overview</button>
+                    <button class="tab-button" onclick="switchTab(event, 'encrypt-detail')">Detailed Steps</button>
+                </div>
+
+                <div id="encrypt-flow" class="tab-content active">
+                    <div class="flow-diagram">
+                        <div class="flow-step">
+                            <div class="flow-step-number">1</div>
+                            <div class="flow-step-desc"><strong>Generate symmetric key</strong> (AES-256)</div>
+                        </div>
+                        <div style="text-align: center; color: var(--color-text-secondary); margin: 5px 0;">↓</div>
+                        <div class="flow-step">
+                            <div class="flow-step-number">2</div>
+                            <div class="flow-step-desc"><strong>Encrypt data</strong> with AES-GCM using symmetric key</div>
+                        </div>
+                        <div style="text-align: center; color: var(--color-text-secondary); margin: 5px 0;">↓</div>
+                        <div class="flow-step">
+                            <div class="flow-step-number">3</div>
+                            <div class="flow-step-desc"><strong>Encrypt symmetric key</strong> with RSA-OAEP public key</div>
+                        </div>
+                        <div style="text-align: center; color: var(--color-text-secondary); margin: 5px 0;">↓</div>
+                        <div class="flow-step">
+                            <div class="flow-step-number">4</div>
+                            <div class="flow-step-desc"><strong>Package result</strong> with encrypted key, ciphertext, IV, and tag</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="encrypt-detail" class="tab-content">
+                    <div class="info-box">
+                        <h4>Why Hybrid Encryption?</h4>
+                        <p><strong>Symmetric encryption (AES):</strong> Fast for large data, but key distribution is difficult.</p>
+                        <p><strong>Asymmetric encryption (RSA):</strong> Solves key distribution, but slow for bulk data.</p>
+                        <p><strong>Hybrid approach:</strong> Combines speed of symmetric with secure key exchange of asymmetric.</p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Message to encrypt:</label>
+                    <textarea id="plaintextInput" placeholder="Enter your message here...">Hello, this is a confidential message protected by hybrid encryption!</textarea>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-primary" onclick="generateKeys()">1. Generate RSA Keys</button>
+                    <button class="btn-primary" onclick="encryptMessage()">2. Encrypt Message</button>
+                    <button class="btn-secondary" onclick="clearEncrypt()">Clear</button>
+                </div>
+
+                <div id="encryptMessage" class="message"></div>
+
+                <div class="form-group">
+                    <div class="output-label">
+                        Encrypted Package (JSON):
+                        <button class="copy-btn btn-secondary" onclick="copyToClipboard('encryptedOutput')">Copy</button>
+                    </div>
+                    <div class="output-box" id="encryptedOutput">Encrypted data will appear here...</div>
+                </div>
+
+                <div id="encryptStats" class="stats-grid" style="display: none;">
+                    <div class="stat-card">
+                        <div class="stat-label">Original Size</div>
+                        <div class="stat-value" id="originalSize">0 B</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Encrypted Size</div>
+                        <div class="stat-value" id="encryptedSize">0 B</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Encryption Time</div>
+                        <div class="stat-value" id="encryptTime">0 ms</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">RSA Key Size</div>
+                        <div class="stat-value">2048 bit</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Decryption Section -->
+            <div class="section">
+                <h2>Decryption Pipeline</h2>
+
+                <div class="tabs">
+                    <button class="tab-button active" onclick="switchTab(event, 'decrypt-flow')">Overview</button>
+                    <button class="tab-button" onclick="switchTab(event, 'decrypt-detail')">Detailed Steps</button>
+                </div>
+
+                <div id="decrypt-flow" class="tab-content active">
+                    <div class="flow-diagram">
+                        <div class="flow-step">
+                            <div class="flow-step-number">1</div>
+                            <div class="flow-step-desc"><strong>Parse package</strong> and extract encrypted key, ciphertext, IV, tag</div>
+                        </div>
+                        <div style="text-align: center; color: var(--color-text-secondary); margin: 5px 0;">↓</div>
+                        <div class="flow-step">
+                            <div class="flow-step-number">2</div>
+                            <div class="flow-step-desc"><strong>Decrypt symmetric key</strong> with RSA-OAEP private key</div>
+                        </div>
+                        <div style="text-align: center; color: var(--color-text-secondary); margin: 5px 0;">↓</div>
+                        <div class="flow-step">
+                            <div class="flow-step-number">3</div>
+                            <div class="flow-step-desc"><strong>Verify authenticity</strong> using authentication tag (GCM)</div>
+                        </div>
+                        <div style="text-align: center; color: var(--color-text-secondary); margin: 5px 0;">↓</div>
+                        <div class="flow-step">
+                            <div class="flow-step-number">4</div>
+                            <div class="flow-step-desc"><strong>Decrypt ciphertext</strong> using recovered symmetric key</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="decrypt-detail" class="tab-content">
+                    <div class="info-box">
+                        <h4>Security Properties</h4>
+                        <p><strong>Confidentiality:</strong> Only the private key holder can decrypt the symmetric key.</p>
+                        <p><strong>Integrity:</strong> AES-GCM authentication tag ensures data has not been tampered with.</p>
+                        <p><strong>Forward Secrecy:</strong> Each message uses a fresh symmetric key, limiting impact of key compromise.</p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Encrypted package (paste from encryption step):</label>
+                    <textarea id="encryptedInput" placeholder="Paste the encrypted package here..."></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-primary" onclick="decryptMessage()">Decrypt Message</button>
+                    <button class="btn-secondary" onclick="clearDecrypt()">Clear</button>
+                </div>
+
+                <div id="decryptMessage" class="message"></div>
+
+                <div class="form-group">
+                    <div class="output-label">Decrypted Message:</div>
+                    <div class="output-box" id="decryptedOutput">Decrypted message will appear here...</div>
+                </div>
+
+                <div id="decryptStats" class="stats-grid" style="display: none;">
+                    <div class="stat-card">
+                        <div class="stat-label">Decryption Time</div>
+                        <div class="stat-value" id="decryptTime">0 ms</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Authenticity</div>
+                        <div class="stat-value" id="authStatus">Verified ✓</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Data Integrity</div>
+                        <div class="stat-value" id="integrityStatus">OK ✓</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Key Recovery</div>
+                        <div class="stat-value" id="keyStatus">Success ✓</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Management Section -->
+        <div class="section" style="margin-bottom: 30px;">
+            <h2>🔑 Key Management & Storage</h2>
+            
+            <div class="tabs">
+                <button class="tab-button active" onclick="switchTab(event, 'keys-generated')">Generated Keys</button>
+                <button class="tab-button" onclick="switchTab(event, 'keys-info')">Key Information</button>
+            </div>
+
+            <div id="keys-generated" class="tab-content active">
+                <div class="form-group">
+                    <label>RSA Public Key (share with senders):</label>
+                    <div class="key-display" id="publicKeyDisplay">No keys generated yet. Click "Generate RSA Keys" to begin.</div>
+                </div>
+
+                <div class="form-group">
+                    <label>RSA Private Key (keep secret - stored locally in browser):</label>
+                    <div class="key-display" id="privateKeyDisplay">No keys generated yet. Click "Generate RSA Keys" to begin.</div>
+                </div>
+
+                <button class="btn-secondary btn-small" onclick="downloadPrivateKey()">Download Private Key (PKCS#8)</button>
+                <button class="btn-secondary btn-small" onclick="downloadPublicKey()">Download Public Key (PKCS#1)</button>
+            </div>
+
+            <div id="keys-info" class="tab-content">
+                <div class="info-box">
+                    <h4>Key Management Best Practices</h4>
+                    <p><strong>Private Key:</strong> Never share. Store securely (e.g., hardware security module, encrypted file, OS keychain). Rotation should occur periodically or after compromise suspected.</p>
+                    <p><strong>Public Key:</strong> Can be shared openly. Distribute via secure channel to verify sender authenticity (optional but recommended).</p>
+                    <p><strong>Key Size:</strong> 2048-bit RSA is standard; 3072-bit or 4096-bit recommended for longer-term security.</p>
+                    <p><strong>Symmetric Key:</strong> Generated fresh for each encryption; never reused with the same IV in the same key stream.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Privacy Impact Analysis -->
+        <div class="section" style="margin-bottom: 30px;">
+            <h2>📚 Privacy Impact Analysis</h2>
+            
+            <div class="privacy-impact">
+                <h4>What Does This Hybrid Encryption Protect?</h4>
+                <ul>
+                    <li><span class="status-indicator status-success"></span><strong>Confidentiality of content:</strong> Only holders of the private key can read the plaintext message.</li>
+                    <li><span class="status-indicator status-success"></span><strong>Key secrecy:</strong> The symmetric key travels encrypted with RSA, making interception useless without the private key.</li>
+                    <li><span class="status-indicator status-success"></span><strong>Authenticity & Integrity:</strong> GCM authentication tag detects any tampering or corruption.</li>
+                    <li><span class="status-indicator status-success"></span><strong>Forward secrecy:</strong> A breach of one symmetric key does not compromise other messages (each uses a fresh key).</li>
+                </ul>
+            </div>
+
+            <div class="privacy-impact">
+                <h4>What Does Encryption NOT Protect? (Metadata & Side Channels)</h4>
+                <ul>
+                    <li><span class="status-indicator status-pending"></span><strong>Message timing:</strong> Observers can see when messages are sent/received.</li>
+                    <li><span class="status-indicator status-pending"></span><strong>Message size:</strong> The encrypted ciphertext length reveals approximate original message length.</li>
+                    <li><span class="status-indicator status-pending"></span><strong>Recipient identity:</strong> The public key used (or recipient address) may be observable.</li>
+                    <li><span class="status-indicator status-pending"></span><strong>Access patterns:</strong> Repeated encryption/decryption operations may leak information about usage.</li>
+                    <li><span class="status-indicator status-error"></span><strong>Key compromise:</strong> If the RSA private key is stolen, all messages are decryptable retrospectively.</li>
+                </ul>
+            </div>
+
+            <div class="info-box">
+                <h4>GDPR Compliance</h4>
+                <p><strong>GDPR Article 32:</strong> AES-256 + RSA-2048 encryption satisfies "appropriate technical measures" for protecting personal data.</p>
+                <p><strong>Breach Impact:</strong> Encrypted data breaches often have reduced notification obligations if encryption strength is confirmed.</p>
+            </div>
+        </div>
+
+        <!-- One-Time Self-Destruct Links Section -->
+        <div class="section" style="margin-bottom: 30px;">
+            <h2>🔗 One-Time Self-Destruct Links</h2>
+            
+            <div class="tabs">
+                <button class="tab-button active" onclick="switchTab(event, 'link-sender')">Create Link</button>
+                <button class="tab-button" onclick="switchTab(event, 'link-recipient')">Open Link</button>
+            </div>
+
+            <div id="link-sender" class="tab-content active">
+                <div class="info-box">
+                    <h4>Share Encrypted Messages Securely</h4>
+                    <p><strong>How it works:</strong> Your encrypted message is stored on a server once. A unique one-time link is generated that can only be accessed <strong>exactly once</strong>. After first access, the encrypted message is deleted.</p>
+                    <p><strong>Why use this?</strong> Share sensitive encrypted data without worrying about long-term storage exposure. Perfect for ephemeral secure messaging.</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Message (will be encrypted before upload):</label>
+                    <textarea id="selfDestructMessage" placeholder="Enter message to protect with self-destruct link...">Sensitive data that expires after first read</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Expiration Time (minutes):</label>
+                    <input type="number" id="ttlMinutes" value="60" min="1" max="1440" placeholder="60">
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-primary" onclick="createSelfDestructLink()">Generate One-Time Link</button>
+                    <button class="btn-secondary" onclick="clearSelfDestructSender()">Clear</button>
+                </div>
+
+                <div id="linkCreationMessage" class="message"></div>
+
+                <div class="form-group">
+                    <div class="output-label">
+                        Your One-Time Link (share this URL):
+                        <button class="copy-btn btn-secondary" onclick="copyToClipboard('selfDestructLinkOutput')">Copy</button>
+                    </div>
+                    <div class="output-box" id="selfDestructLinkOutput">One-time link will appear here...</div>
+                </div>
+
+                <div class="info-box" style="background-color: rgba(192, 21, 47, 0.08); border-left-color: var(--color-error); margin-top: 20px;">
+                    <h4 style="color: var(--color-error);">⚠️ Backend Required</h4>
+                    <p><strong>Run backend:</strong> <code>node server.js</code> in another terminal</p>
+                    <p><strong>Link lifetime:</strong> The link works only once and expires after the TTL you set.</p>
+                    <p><strong>No storage after access:</strong> The encrypted message is deleted immediately after first retrieval.</p>
+                </div>
+            </div>
+
+            <div id="link-recipient" class="tab-content">
+                <div class="info-box">
+                    <h4>Access a One-Time Link</h4>
+                    <p><strong>Paste the one-time link:</strong> You will be able to retrieve and decrypt the encrypted message exactly once.</p>
+                    <p><strong>After access:</strong> The link becomes invalid and returns an error if accessed again.</p>
+                </div>
+
+                <div class="form-group">
+                    <label>One-Time Link (paste here):</label>
+                    <input type="text" id="selfDestructLinkInput" placeholder="https://localhost:3000/api/secret/abc123...">
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-primary" onclick="openSelfDestructLink()">Retrieve & Decrypt Message</button>
+                    <button class="btn-secondary" onclick="clearSelfDestructRecipient()">Clear</button>
+                </div>
+
+                <div id="linkAccessMessage" class="message"></div>
+
+                <div class="form-group">
+                    <div class="output-label">Decrypted Message:</div>
+                    <div class="output-box" id="selfDestructMessageOutput">Decrypted message will appear here...</div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>Hybrid Encryption Explorer &copy; 2026 | Educational demonstration for MSc Cybersecurity Dissertation</p>
+            <p>For production systems, use established libraries (OpenSSL, libsodium, TweetNaCl).</p>
+        </footer>
+    </div>
+
+    <script src="hybrid-encryption.js"></script>
+</body>
+</html>
